@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Roue d'ascendance</title>
+  <meta name="description" content="Remplissez facilement une roue d'ascendance généalogique, puis exportez-la en image ou imprimez-la.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='-12 -12 24 24'%3E%3Ccircle r='11' fill='%23e7c9a9'/%3E%3Cpath d='M0 0L0-11A11 11 0 0 1 11 0Z' fill='%23a9c3dd'/%3E%3Cpath d='M0 0L-11 0A11 11 0 0 1 0-11Z' fill='%23b9ddd0'/%3E%3Ccircle r='4.5' fill='%238a3b2e'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <svg class="logo" viewBox="-12 -12 24 24" aria-hidden="true">
+        <circle r="11" fill="#e7c9a9"/>
+        <path d="M0 0L0-11A11 11 0 0 1 11 0Z" fill="#a9c3dd"/>
+        <path d="M0 0L-11 0A11 11 0 0 1 0-11Z" fill="#b9ddd0"/>
+        <circle r="4.5" fill="#8a3b2e"/>
+      </svg>
+      <div class="brand-text">
+        <h1>Roue d'ascendance</h1>
+        <input id="title" type="text" aria-label="Titre de la roue" placeholder="Titre (ex. Ascendance de Marie Dupont)">
+      </div>
+    </div>
+
+    <div class="toolbar">
+      <label>Générations
+        <select id="gens">
+          <option value="2">2</option><option value="3">3</option><option value="4">4</option>
+          <option value="5">5</option><option value="6">6</option><option value="7">7</option>
+          <option value="8">8</option>
+        </select>
+      </label>
+      <label>Forme
+        <select id="shape">
+          <option value="360">Roue complète</option>
+          <option value="270">Éventail 270°</option>
+          <option value="180">Demi-roue</option>
+        </select>
+      </label>
+      <label>Couleurs
+        <select id="palette">
+          <option value="lignees">Par lignée</option>
+          <option value="generations">Par génération</option>
+          <option value="sobre">Sobre (impression)</option>
+        </select>
+      </label>
+      <label class="check"><input type="checkbox" id="showSosa"> N° Sosa</label>
+      <label class="check" title="Dates complètes, lieu de naissance, profession"><input type="checkbox" id="showDetails"> Détails</label>
+    </div>
+
+    <div class="actions">
+      <details class="menu">
+        <summary class="btn">Fichier ▾</summary>
+        <div class="menu-list">
+          <button type="button" data-action="open-json">Ouvrir une sauvegarde (.json)…</button>
+          <button type="button" data-action="save-json">Enregistrer une sauvegarde (.json)</button>
+          <button type="button" data-action="import-ged">Importer un GEDCOM (.ged)…</button>
+          <hr>
+          <button type="button" data-action="clear-all" class="danger">Tout effacer…</button>
+        </div>
+      </details>
+      <details class="menu">
+        <summary class="btn btn-primary">Exporter ▾</summary>
+        <div class="menu-list">
+          <button type="button" data-action="export-png">Image PNG (haute définition)</button>
+          <button type="button" data-action="export-svg">Image vectorielle SVG</button>
+          <button type="button" data-action="print">Imprimer / PDF…</button>
+        </div>
+      </details>
+    </div>
+  </header>
+
+  <main>
+    <section class="stage" aria-label="Roue">
+      <svg id="wheel" role="img" aria-label="Roue d'ascendance" xmlns="http://www.w3.org/2000/svg"></svg>
+      <div class="zoom">
+        <button type="button" class="btn icon" data-zoom="in" aria-label="Zoomer">+</button>
+        <button type="button" class="btn icon" data-zoom="out" aria-label="Dézoomer">−</button>
+        <button type="button" class="btn icon" data-zoom="reset" aria-label="Recentrer">⟲</button>
+      </div>
+      <p class="hint">Cliquez sur une case pour la remplir · molette pour zoomer · glisser pour déplacer</p>
+    </section>
+
+    <aside class="panel" id="panel">
+      <section id="overview">
+        <h2>Pour commencer</h2>
+        <ol class="steps">
+          <li><strong>Cliquez au centre</strong> de la roue pour saisir la personne de départ.</li>
+          <li>Passez aux parents, grands-parents… La touche <kbd>Entrée</kbd> mène à la case suivante.</li>
+          <li><strong>Exportez</strong> la roue en image ou imprimez-la quand elle vous plaît.</li>
+        </ol>
+        <p class="tip">Déjà un arbre sur Geneanet, Heredis, Ancestry… ?
+          <button type="button" class="link" data-action="import-ged">Importez votre fichier GEDCOM</button>
+          et la roue se remplit toute seule.</p>
+
+        <h3>Progression</h3>
+        <div id="stats"></div>
+        <p class="saved" id="saved">Enregistrement automatique dans ce navigateur.</p>
+      </section>
+
+      <section id="editor">
+        <div class="ed-head">
+          <div>
+            <span class="badge" id="edSosa">Sosa 1</span>
+            <h2 id="edRole">Personne centrale</h2>
+            <p id="edPath" class="ed-path"></p>
+          </div>
+          <button type="button" class="btn icon ghost" id="edClose" aria-label="Fermer">×</button>
+        </div>
+
+        <form id="form" autocomplete="off">
+          <div class="row2">
+            <label>Prénom(s)<input name="prenom" type="text"></label>
+            <label>Nom<input name="nom" type="text"></label>
+          </div>
+          <fieldset>
+            <legend>° Naissance</legend>
+            <div class="row2">
+              <label>Date<input name="naissDate" type="text" placeholder="12 mars 1850, vers 1850…"></label>
+              <label>Lieu<input name="naissLieu" type="text" placeholder="Commune"></label>
+            </div>
+          </fieldset>
+          <fieldset>
+            <legend>† Décès</legend>
+            <div class="row2">
+              <label>Date<input name="decesDate" type="text"></label>
+              <label>Lieu<input name="decesLieu" type="text" placeholder="Commune"></label>
+            </div>
+          </fieldset>
+          <label>Profession<input name="profession" type="text"></label>
+          <label>Notes<textarea name="notes" rows="3"></textarea></label>
+        </form>
+
+        <div class="ed-nav">
+          <button type="button" class="btn" data-go="child">↓ Enfant</button>
+          <button type="button" class="btn" data-go="father">Père ↑</button>
+          <button type="button" class="btn" data-go="mother">Mère ↑</button>
+        </div>
+        <div class="ed-nav">
+          <button type="button" class="btn" data-go="prev">← Précédent</button>
+          <button type="button" class="btn btn-primary" data-go="next">Suivant →</button>
+        </div>
+        <p class="kbd-hint"><kbd>Entrée</kbd> case suivante · <kbd>Maj</kbd>+<kbd>Entrée</kbd> précédente · <kbd>Échap</kbd> fermer</p>
+        <button type="button" class="link danger" id="edClear">Effacer cette fiche</button>
+      </section>
+    </aside>
+  </main>
+
+  <dialog id="gedDialog">
+    <form method="dialog" class="dlg">
+      <h2>Qui est au centre de la roue ?</h2>
+      <p id="gedInfo" class="muted"></p>
+      <input type="search" id="gedSearch" placeholder="Rechercher un nom…" aria-label="Rechercher">
+      <ul id="gedList"></ul>
+      <div class="dlg-actions"><button class="btn" value="cancel">Annuler</button></div>
+    </form>
+  </dialog>
+
+  <input type="file" id="fileJson" accept=".json,application/json" hidden>
+  <input type="file" id="fileGed" accept=".ged,.gedcom,text/plain" hidden>
+  <div id="toast" role="status" aria-live="polite"></div>
+  <div id="print-area"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
