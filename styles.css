@@ -129,9 +129,15 @@ main {
   user-select: none;
 }
 #wheel.panning { cursor: grabbing; }
-#wheel .seg { cursor: pointer; transition: filter .12s; }
-#wheel .seg:hover { filter: brightness(.93) saturate(1.2); }
-#wheel.panning .seg { cursor: grabbing; }
+#tip {
+  position: absolute; left: 0; top: 0;
+  max-width: 280px; padding: 8px 11px;
+  font-size: .8rem; line-height: 1.45; white-space: pre-line;
+  color: #fff; background: rgba(43, 37, 32, .92); border-radius: 8px;
+  pointer-events: none; opacity: 0; transition: opacity .12s;
+  z-index: 5;
+}
+#tip.show { opacity: 1; }
 
 .zoom { position: absolute; right: 14px; bottom: 14px; display: flex; flex-direction: column; gap: 6px; }
 .zoom .btn { box-shadow: 0 2px 6px rgba(60, 40, 20, .08); }
@@ -159,7 +165,7 @@ kbd {
   background: #fff;
 }
 
-.stat { display: grid; grid-template-columns: 1fr 80px 64px; align-items: center; gap: 10px; font-size: .84rem; padding: 4px 0; }
+.stat { display: grid; grid-template-columns: 1fr 52px 100px; align-items: center; gap: 10px; font-size: .84rem; padding: 4px 0; }
 .stat span:first-child { color: var(--ink-2); }
 .stat .bar { height: 6px; border-radius: 3px; background: #efe6d8; overflow: hidden; }
 .stat .bar i { display: block; height: 100%; background: var(--accent); border-radius: 3px; transition: width .25s; }
@@ -260,5 +266,5 @@ dialog::backdrop { background: rgba(43, 37, 32, .45); }
   body { background: #fff; height: auto; overflow: visible; display: block; }
   body > *:not(#print-area) { display: none !important; }
   #print-area { display: block; }
-  #print-area svg { display: block; width: 100%; height: auto; max-height: 95vh; margin: 0 auto; }
+  #print-area img { display: block; width: 100%; height: auto; max-height: 95vh; margin: 0 auto; }
 }
